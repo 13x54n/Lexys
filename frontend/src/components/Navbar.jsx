@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { auth } from "../../firebase";
-import ProfileSidebar from "../components/ProfileSidebar";
+import ProfileSidebar from "./ProfileSidebar";
 
 export default function Navbar({setShowUploader}) {
   const user = auth.currentUser;

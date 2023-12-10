@@ -1,0 +1,23 @@
+{
+  "name": "lexys",
+  "version": "1.0.0",
+  "description": "Lexys is a photo sharing and storage service developed by your Lexy. ❤️",
+  "main": "index.js",
+  "repository": "https://github.com/13x54n/Lexys",
+  "author": "Lex",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon index.js"
+  },
+  "private": true,
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^8.0.3",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  }
+}

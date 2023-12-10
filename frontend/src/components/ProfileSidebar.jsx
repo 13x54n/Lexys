@@ -1,13 +1,20 @@
-import { Fragment } from "react";
+import { Fragment, useContext } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { auth } from "../../firebase";
+import { UserContext } from "../contexts/User";
+import { signOut } from "firebase/auth";
 
 export default function ProfileSidebar({
   openProfileSidebar,
   handleOpenSidebar,
 }) {
   const user = auth.currentUser;
+  const { userState } = useContext(UserContext);
+
+  const handleUserSignOut = () => {
+    signOut(auth)
+  }
 
   return (
     <Transition.Root show={openProfileSidebar} as={Fragment}>
@@ -78,12 +85,12 @@ export default function ProfileSidebar({
                         />
                         <div className="text-sm">
                           <p>{user.email}</p>
-                          <button className="font-medium">Sign Out</button>
+                          <button onClick={() => handleUserSignOut()} className="font-medium">Sign Out</button>
                         </div>
                       </div>
 
                       <div className="flex flex-row items-center justify-between">
-                        <p className="text-md mt-2 font-medium">Folders</p>
+                        <p className="text-md mt-2 font-medium">Albums</p>
                         <button>
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -101,6 +108,69 @@ export default function ProfileSidebar({
                           </svg>
                         </button>
                       </div>
+
+                      <button className="w-full hover:bg-gray-100">
+                        <p className="flex flex-row gap-2 items-center text-sm p-3 border-b-2">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={1.5}
+                            stroke="currentColor"
+                            className="w-5 h-5"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
+                            />
+                          </svg>
+                          All
+                        </p>
+                      </button>
+
+                      {userState.folders.map((folder, index) => {
+                        return (
+                          <div
+                            key={index}
+                            className="w-full hover:bg-gray-100 cursor-pointer border-b-2 flex flex-row justify-between items-center"
+                          >
+                            <p className="flex flex-row gap-2 items-center text-sm p-3">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-5 h-5"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
+                                />
+                              </svg>
+                              {folder.folderName}
+                            </p>
+                            <button>
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                strokeWidth={1.5}
+                                stroke="currentColor"
+                                className="w-4 h-4"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </Dialog.Panel>

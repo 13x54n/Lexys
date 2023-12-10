@@ -1,7 +1,9 @@
-import React, { useState } from "react";
-import Navbar from "../contexts/Navbar";
+import React, { useContext, useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
 import { Helmet } from "react-helmet";
 import { FileUploader } from "react-drag-drop-files";
+import { auth } from "../../firebase";
+import { UserContext } from "../contexts/User";
 
 const fileTypes = ["JPG", "PNG", "GIF", "WEBP"];
 
@@ -13,6 +15,17 @@ export default function Dashboard() {
   const handleFileUploadChange = (file) => {
     setFile(file);
   };
+
+  const user = auth.currentUser;
+  const { userState, userDispatch } = useContext(UserContext);
+
+  useEffect(() => {
+    fetch(`${import.meta.env.VITE_API_URI}/folder/${user.uid}`)
+      .then((res) => res.json())
+      .then((res) => userDispatch({ type: "SET_USER", payload: res }))
+      .catch((err) => console.log(err));
+  }, []);
+
   return (
     <div className="relative min-h-[100vh]">
       <Helmet>
@@ -47,6 +60,13 @@ export default function Dashboard() {
                 name="file"
                 types={fileTypes}
               />
+              <label htmlFor="">Add to Folder</label><br/>
+              <select name="" id="">
+                <option value="all">All</option>
+                {userState.folders.map((folder, index) => (
+                  <option value={folder._id} key={index}>{folder.folderName}</option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
