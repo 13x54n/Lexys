@@ -2,10 +2,12 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const dotenv = require("dotenv");
+dotenv.config();
+
 const mongoose = require("mongoose");
 const FolderRouter = require("./routes/Folder");
+const ImageRouter = require("./routes/Image");
 
-dotenv.config();
 
 const app = express();
 
@@ -26,6 +28,7 @@ mongoose
   });
 
 app.use("/api/v1/folder", FolderRouter);
+app.use("/api/v1/image", ImageRouter);
 
 app.get("*", (req, res) => {
   res.status(404).send("404 API Endpoint Not Found!");
