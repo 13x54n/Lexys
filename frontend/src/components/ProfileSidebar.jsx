@@ -1,20 +1,74 @@
-import { Fragment, useContext } from "react";
+import { Fragment, useContext, useState } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { auth } from "../../firebase";
 import { UserContext } from "../contexts/User";
 import { signOut } from "firebase/auth";
+import FolderActionButton from "./FolderActionButton";
 
 export default function ProfileSidebar({
   openProfileSidebar,
   handleOpenSidebar,
 }) {
   const user = auth.currentUser;
-  const { userState } = useContext(UserContext);
+  const { userState, userDispatch } = useContext(UserContext);
 
   const handleUserSignOut = () => {
-    signOut(auth)
-  }
+    signOut(auth);
+  };
+
+  const [folderActionState, setFolderActionState] = useState("Create");
+  const [openNewFolderForm, setOpenNewFolderForm] = useState(false);
+  const [newFolderName, setNewFolderName] = useState("");
+
+  const handleNewFolder = () => {
+    fetch(`${import.meta.env.VITE_API_URI}/folder`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        folderName: newFolderName,
+        user: user.uid,
+      }),
+    })
+      .then((response) => response.json())
+      .then((res) => {
+        console.log(res);
+        setNewFolderName("");
+        setOpenNewFolderForm(false);
+        userDispatch({ type: "ADD_FOLDER", payload: res });
+      })
+      .catch((err) => console.log(err));
+  };
+
+  const handleEditFolderSubmit = () => {
+    fetch(
+      `${import.meta.env.VITE_API_URI}/folder/${
+        userState.folders[localStorage.getItem("lexys_updateitem_index")]._id
+      }`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          folderName: newFolderName,
+        }),
+      }
+    )
+      .then((res) => res.json())
+      .then((res) => {
+        setNewFolderName("");
+        setOpenNewFolderForm(false);
+        const updatedItem = res;
+        const updatedFolders = [...userState.folders];
+        updatedFolders[localStorage.getItem("lexys_updateitem_index")] =
+          updatedItem;
+        userDispatch({ type: "UPDATE_FOLDER", payload: updatedFolders });
+        localStorage.removeItem("lexys_updateitem_index");
+      });
+  };
 
   return (
     <Transition.Root show={openProfileSidebar} as={Fragment}>
@@ -85,13 +139,18 @@ export default function ProfileSidebar({
                         />
                         <div className="text-sm">
                           <p>{user.email}</p>
-                          <button onClick={() => handleUserSignOut()} className="font-medium">Sign Out</button>
+                          <button
+                            onClick={() => handleUserSignOut()}
+                            className="font-medium"
+                          >
+                            Sign Out
+                          </button>
                         </div>
                       </div>
 
                       <div className="flex flex-row items-center justify-between">
                         <p className="text-md mt-2 font-medium">Albums</p>
-                        <button>
+                        <button onClick={() => setOpenNewFolderForm(true)}>
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
                             fill="none"
@@ -109,33 +168,36 @@ export default function ProfileSidebar({
                         </button>
                       </div>
 
-                      <button className="w-full hover:bg-gray-100">
-                        <p className="flex flex-row gap-2 items-center text-sm p-3 border-b-2">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            strokeWidth={1.5}
-                            stroke="currentColor"
-                            className="w-5 h-5"
+                      {openNewFolderForm && (
+                        <div className="flex flex-row gap-2 items-center mt-2">
+                          <input
+                            value={newFolderName}
+                            onChange={(e) => setNewFolderName(e.target.value)}
+                            type="text"
+                            placeholder="Folder Name..."
+                            required
+                            className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                          />
+                          <button
+                            onClick={() =>
+                              folderActionState === "Create"
+                                ? handleNewFolder()
+                                : handleEditFolderSubmit()
+                            }
+                            className="bg-black text-white p-2 px-3 rounded text-sm"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121.75 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9a2.25 2.25 0 00-2.25-2.25h-5.379a1.5 1.5 0 01-1.06-.44z"
-                            />
-                          </svg>
-                          All
-                        </p>
-                      </button>
+                            {folderActionState}
+                          </button>
+                        </div>
+                      )}
 
                       {userState.folders.map((folder, index) => {
                         return (
                           <div
                             key={index}
-                            className="w-full hover:bg-gray-100 cursor-pointer border-b-2 flex flex-row justify-between items-center"
+                            className="w-full hover:bg-gray-100 cursor-pointer p-3 border-b-2 flex flex-row justify-between items-center"
                           >
-                            <p className="flex flex-row gap-2 items-center text-sm p-3">
+                            <p className="flex flex-row gap-2 items-center text-sm">
                               <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 fill="none"
@@ -152,22 +214,15 @@ export default function ProfileSidebar({
                               </svg>
                               {folder.folderName}
                             </p>
-                            <button>
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth={1.5}
-                                stroke="currentColor"
-                                className="w-4 h-4"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M12 6.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 12.75a.75.75 0 110-1.5.75.75 0 010 1.5zM12 18.75a.75.75 0 110-1.5.75.75 0 010 1.5z"
-                                />
-                              </svg>
-                            </button>
+                            {folder.folderName !== "All" && (
+                              <FolderActionButton
+                                setFolderActionState={setFolderActionState}
+                                setNewFolderName={setNewFolderName}
+                                folder={folder}
+                                setOpenNewFolderForm={setOpenNewFolderForm}
+                                index={index}
+                              />
+                            )}
                           </div>
                         );
                       })}

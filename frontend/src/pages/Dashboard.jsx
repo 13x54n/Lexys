@@ -37,13 +37,13 @@ export default function Dashboard() {
           <div className="relative min-h-full min-w-full">
             <div className="absolute bg-white p-4 top-[25vh] left-[50%] translate-x-[-50%] rounded">
               <div className="mb-4 flex flex-row justify-between items-center">
-                <p className="text-sm">Upload Image</p>
+                <p className="text-sm font-medium">Upload Image</p>
                 <button onClick={() => setShowUploader(false)}>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
-                    strokeWidth={1.5}
+                    strokeWidth={2}
                     stroke="red"
                     className="w-4 h-4"
                   >
@@ -60,13 +60,15 @@ export default function Dashboard() {
                 name="file"
                 types={fileTypes}
               />
-              <label htmlFor="">Add to Folder</label><br/>
-              <select name="" id="">
+              <p className="text-sm mt-2 font-medium">Add to Folder</p>
+
+              <select className="w-full mt-2 p-1 px-3 rounded">
                 <option value="all">All</option>
                 {userState.folders.map((folder, index) => (
                   <option value={folder._id} key={index}>{folder.folderName}</option>
                 ))}
               </select>
+              <button className="mt-3 w-full py-2 rounded text-sm bg-indigo-900 text-white">Submit</button>
             </div>
           </div>
         </div>
