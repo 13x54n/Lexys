@@ -11,15 +11,43 @@ import { saveAs } from "file-saver";
 const fileTypes = ["JPG", "PNG", "GIF", "WEBP"];
 
 export default function Dashboard() {
+  const user = auth.currentUser;
+
   const [showUploader, setShowUploader] = useState(false);
 
   const [file, setFile] = useState(null);
+  const [folderSelection, setFolderSelection] = useState();
 
   const handleFileUploadChange = (file) => {
     setFile(file);
   };
 
-  const user = auth.currentUser;
+  const uploadImages = () => {
+    const formData = new FormData();
+    formData.append("user", user.uid);
+    for (let i = 0; i < file.length; i++) {
+      formData.append("lexysImage", file[i]);
+    }
+    if (folderSelection) {
+      formData.append("folderId", folderSelection);
+    }
+    fetch(`${import.meta.env.VITE_API_URI}/image`, {
+      method: "POST",
+      body: formData,
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        toast(data.msg);
+
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
   const { userState, userDispatch } = useContext(UserContext);
 
   useEffect(() => {
@@ -97,18 +125,28 @@ export default function Dashboard() {
                 handleChange={handleFileUploadChange}
                 name="file"
                 types={fileTypes}
+                multiple={true}
               />
               <p className="text-sm mt-2 font-medium">Add to Folder</p>
 
-              <select className="w-full mt-2 p-1 px-3 rounded">
-                <option value="all">All</option>
+              <select
+                value={folderSelection}
+                onChange={(e) => {
+                  setFolderSelection(e.target.value);
+                }}
+                className="w-full mt-2 p-1 px-3 rounded"
+              >
+                <option value="">All</option>
                 {userState.folders.map((folder, index) => (
                   <option value={folder._id} key={index}>
                     {folder.folderName}
                   </option>
                 ))}
               </select>
-              <button className="mt-3 w-full py-2 rounded text-sm bg-indigo-900 text-white">
+              <button
+                onClick={() => uploadImages()}
+                className="mt-3 w-full py-2 rounded text-sm bg-indigo-900 text-white"
+              >
                 Submit
               </button>
             </div>
@@ -118,7 +156,7 @@ export default function Dashboard() {
 
       <div className="mx-[3vw] py-5 flex flex-wrap gap-4">
         {!isImagePreviewModalOpen &&
-          ImageState.images.map((image, index) => {
+          ImageState.images.reverse().map((image, index) => {
             if (!image.deleted)
               return (
                 <img
@@ -224,7 +262,7 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-row items-center mt-4 h-[75vh]">
               <button
-              className="h-full hover:bg-gray-100 px-3"
+                className="h-full hover:bg-gray-100 px-3"
                 disabled={imagePreviewIndex > 0 ? false : true}
                 onClick={() => setImagePreviewIndex(imagePreviewIndex - 1)}
               >
@@ -249,7 +287,7 @@ export default function Dashboard() {
                 alt=""
               />
               <button
-              className="h-full hover:bg-gray-100 px-3"
+                className="h-full hover:bg-gray-100 px-3"
                 disabled={
                   imagePreviewIndex < ImageState.images.length - 1
                     ? false
